@@ -126,6 +126,10 @@ body {
 .filter-group select:focus, .filter-group input[type=date]:focus, .filter-group input[type=search]:focus {
   outline: none; border-color: var(--blue-mid);
 }
+.filter-group select:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
 .filter-group select option { background: #1A1916; color: #fff; }
 .multi-select-wrap { position: relative; }
 .multi-check-list {
@@ -143,9 +147,40 @@ body {
 }
 .multi-check-list label:last-child { border-bottom: none; }
 .multi-check-list input[type=checkbox] { accent-color: var(--blue-mid); width: 12px; height: 12px; }
+.country-flag {
+  width: 18px;
+  height: 12px;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 2px;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
 
 .date-range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .date-range-inputs input { font-size: 11px; }
+.compare-control { margin-top: 10px; }
+.filter-mini-label {
+  font-size: 10px; color: rgba(255,255,255,0.4);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px;
+}
+.compare-period-wrap { display: none; margin-top: 8px; }
+.compare-control select {
+  font-size: 11px;
+  padding-left: 8px;
+  padding-right: 24px;
+}
+.compare-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+}
+.compare-period-cell { grid-column: 1 / -1; }
+.compare-hint {
+  margin-top: 6px; font-size: 10px;
+  color: rgba(255,255,255,0.45); line-height: 1.4;
+}
 
 .filter-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 8px 16px 16px; }
 
@@ -320,6 +355,53 @@ tbody tr:hover td { background: var(--surface2); }
     <div class="date-notice" id="date-retro-notice" style="display:none">
       ⚠ Custom date range selected — retrospective comparison will be hidden.
     </div>
+    <div class="compare-control">
+      <div class="filter-mini-label">Compare</div>
+      <div class="select-wrap">
+        <select id="f-compare-mode" onchange="onCompareModeChange()">
+          <option value="previous" selected>Previous period</option>
+          <option value="same-period">Same period by year</option>
+        </select>
+      </div>
+      <div class="compare-period-wrap" id="compare-period-wrap">
+        <div class="filter-mini-label">Period type</div>
+        <div class="select-wrap">
+          <select id="f-compare-type" onchange="onCompareTypeChange()">
+            <option value="month" selected>Month</option>
+            <option value="quarter">Quarter</option>
+          </select>
+        </div>
+        <div class="compare-row">
+          <div class="compare-period-cell">
+            <div class="filter-mini-label">Period</div>
+            <div class="select-wrap">
+              <select id="f-compare-period"></select>
+            </div>
+          </div>
+          <div>
+            <div class="filter-mini-label">Year 1</div>
+            <div class="select-wrap">
+              <select id="f-current-year">
+                <option value="2024">2024</option>
+                <option value="2025" selected>2025</option>
+                <option value="2026">2026</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div class="filter-mini-label">Year 2</div>
+            <div class="select-wrap">
+              <select id="f-compare-year">
+                <option value="2024" selected>2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="compare-hint">Period type controls the time view; the main time filter is locked for this comparison.</div>
+      </div>
+    </div>
   </div>
 
   <hr class="filter-divider"/>
@@ -330,15 +412,15 @@ tbody tr:hover td { background: var(--surface2); }
     <input type="search" id="country-search" class="multi-check-search" placeholder="Search countries" oninput="filterCountries()"/>
     <div class="multi-check-list" id="country-list">
       <label><input type="checkbox" value="all" checked onchange="handleCountryAll(this)"> All Countries</label>
-      <label><input type="checkbox" value="US"> United States</label>
-      <label><input type="checkbox" value="UK"> United Kingdom</label>
-      <label><input type="checkbox" value="DE"> Germany</label>
-      <label><input type="checkbox" value="IN"> India</label>
-      <label><input type="checkbox" value="AE"> UAE</label>
-      <label><input type="checkbox" value="SG"> Singapore</label>
-      <label><input type="checkbox" value="ZA"> South Africa</label>
-      <label><input type="checkbox" value="FR"> France</label>
-      <label><input type="checkbox" value="CN"> China</label>
+      <label><input type="checkbox" value="US"><span class="country-flag" data-country-flag="US"></span> United States</label>
+      <label><input type="checkbox" value="UK"><span class="country-flag" data-country-flag="UK"></span> United Kingdom</label>
+      <label><input type="checkbox" value="DE"><span class="country-flag" data-country-flag="DE"></span> Germany</label>
+      <label><input type="checkbox" value="IN"><span class="country-flag" data-country-flag="IN"></span> India</label>
+      <label><input type="checkbox" value="AE"><span class="country-flag" data-country-flag="AE"></span> UAE</label>
+      <label><input type="checkbox" value="SG"><span class="country-flag" data-country-flag="SG"></span> Singapore</label>
+      <label><input type="checkbox" value="ZA"><span class="country-flag" data-country-flag="ZA"></span> South Africa</label>
+      <label><input type="checkbox" value="FR"><span class="country-flag" data-country-flag="FR"></span> France</label>
+      <label><input type="checkbox" value="CN"><span class="country-flag" data-country-flag="CN"></span> China</label>
     </div>
   </div>
 
@@ -389,9 +471,9 @@ tbody tr:hover td { background: var(--surface2); }
 
     <div class="kpi-card">
       <div class="kpi-top">
-        <div class="kpi-label">Total PEP Profiles</div>
+        <div class="kpi-label">Total PEP Profile Delivered</div>
         <button class="info-btn" aria-label="Definition">i
-          <div class="tooltip-box">Total number of PEP profiles in the system for the selected country scope and time period.</div>
+          <div class="tooltip-box">Total number of PEP profiles delivered for the selected country scope and time period.</div>
         </button>
       </div>
       <div class="kpi-val" id="kpi-total">—</div>
@@ -444,8 +526,8 @@ tbody tr:hover td { background: var(--surface2); }
       </div>
     </div>
     <div class="legend">
-      <div class="legend-item"><div class="leg-dot" style="background:#4B89CC"></div>Current period %</div>
-      <div class="legend-item" id="field-prev-legend"><div class="leg-dot" style="background:#D2E8F8;border:1px solid #A8CCE8"></div>Previous period %</div>
+      <div class="legend-item"><div class="leg-dot" style="background:#4B89CC"></div><span id="field-current-legend-label">Current period %</span></div>
+      <div class="legend-item" id="field-prev-legend"><div class="leg-dot" style="background:#D2E8F8;border:1px solid #A8CCE8"></div><span id="field-prev-legend-label">Previous period %</span></div>
     </div>
     <div style="position:relative;width:100%;height:280px">
       <canvas id="fieldChart" role="img" aria-label="Bar chart showing fill rate per data field"></canvas>
@@ -551,6 +633,24 @@ const COUNTRIES = [
   { code:'CN', label:'China',          mult:0.963 },
 ];
 
+function svgFlag(svg) {
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+const COUNTRY_FLAGS = {
+  US: svgFlag(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16"><defs><pattern id="s" width="24" height="2.46" patternUnits="userSpaceOnUse"><rect width="24" height="1.23" fill="#b22234"/></pattern></defs><rect width="24" height="16" fill="#fff"/><rect width="24" height="16" fill="url(#s)"/><rect width="10.5" height="8.6" fill="#3c3b6e"/></svg>`),
+  UK: svgFlag(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16"><rect width="24" height="16" fill="#012169"/><path d="M0 0l24 16M24 0L0 16" stroke="#fff" stroke-width="4"/><path d="M0 0l24 16M24 0L0 16" stroke="#c8102e" stroke-width="2"/><path d="M12 0v16M0 8h24" stroke="#fff" stroke-width="5"/><path d="M12 0v16M0 8h24" stroke="#c8102e" stroke-width="3"/></svg>`),
+  DE: svgFlag(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16"><rect width="24" height="5.33" fill="#000"/><rect y="5.33" width="24" height="5.34" fill="#dd0000"/><rect y="10.67" width="24" height="5.33" fill="#ffce00"/></svg>`),
+  IN: svgFlag(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16"><rect width="24" height="5.33" fill="#ff9933"/><rect y="5.33" width="24" height="5.34" fill="#fff"/><rect y="10.67" width="24" height="5.33" fill="#138808"/><circle cx="12" cy="8" r="1.8" fill="none" stroke="#000080" stroke-width=".55"/><circle cx="12" cy="8" r=".45" fill="#000080"/></svg>`),
+  AE: svgFlag(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16"><rect width="24" height="16" fill="#fff"/><rect x="6" width="18" height="5.33" fill="#009a44"/><rect x="6" y="10.67" width="18" height="5.33" fill="#000"/><rect width="6" height="16" fill="#ef3340"/></svg>`),
+  SG: svgFlag(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16"><rect width="24" height="8" fill="#ef3340"/><rect y="8" width="24" height="8" fill="#fff"/><circle cx="6.5" cy="4.1" r="2.4" fill="#fff"/><circle cx="7.4" cy="4.1" r="2.1" fill="#ef3340"/><g fill="#fff"><circle cx="10.3" cy="2.5" r=".35"/><circle cx="11.2" cy="3.7" r=".35"/><circle cx="10.8" cy="5.1" r=".35"/><circle cx="9.4" cy="5.1" r=".35"/><circle cx="9" cy="3.7" r=".35"/></g></svg>`),
+  ZA: svgFlag(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16"><rect width="24" height="16" fill="#de3831"/><rect y="8" width="24" height="8" fill="#002395"/><path d="M0 0l11 8L0 16z" fill="#000"/><path d="M0 1.8L8.5 8 0 14.2M8.5 8H24" fill="none" stroke="#fff" stroke-width="5"/><path d="M0 2.8L7.2 8 0 13.2M7.2 8H24" fill="none" stroke="#ffb612" stroke-width="3.2"/><path d="M0 3.7L6 8 0 12.3M6 8H24" fill="none" stroke="#007a4d" stroke-width="2.4"/></svg>`),
+  FR: svgFlag(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16"><rect width="8" height="16" fill="#0055a4"/><rect x="8" width="8" height="16" fill="#fff"/><rect x="16" width="8" height="16" fill="#ef4135"/></svg>`),
+  CN: svgFlag(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16"><rect width="24" height="16" fill="#de2910"/><path d="M4.2 2.1l.65 1.35 1.48.2-1.07 1.04.25 1.47-1.31-.7-1.31.7.25-1.47-1.07-1.04 1.48-.2z" fill="#ffde00"/><g fill="#ffde00"><circle cx="8" cy="2.7" r=".45"/><circle cx="9.4" cy="4.3" r=".45"/><circle cx="9.2" cy="6.5" r=".45"/><circle cx="7.7" cy="8" r=".45"/></g></svg>`)
+};
+
+const COUNTRY_FLAG_IMAGES = {};
+
 // profile counts per country (sum ≈ TOTAL_PROFILES_BASE)
 const COUNTRY_PROFILES = {
   US:310000, UK:185000, DE:142000, IN:220000,
@@ -619,6 +719,55 @@ function parseDateInput(value) {
   return parts.length === 3 ? new Date(parts[0], parts[1] - 1, parts[2]) : null;
 }
 
+function populateComparePeriodOptions() {
+  const typeSelect = document.getElementById('f-compare-type');
+  const periodSelect = document.getElementById('f-compare-period');
+  if (!typeSelect || !periodSelect) return;
+
+  const type = typeSelect.value;
+  const currentValue = periodSelect.value;
+  const options = type === 'quarter'
+    ? [{ value:'1', label:'Q1' }, { value:'2', label:'Q2' }, { value:'3', label:'Q3' }, { value:'4', label:'Q4' }]
+    : MONTH_SHORT.map((label, index) => ({ value:String(index), label }));
+
+  periodSelect.innerHTML = options.map(option => `<option value="${option.value}">${option.label}</option>`).join('');
+  const fallback = type === 'quarter' ? '1' : '4';
+  periodSelect.value = options.some(option => option.value === currentValue) ? currentValue : fallback;
+}
+
+function formatComparePeriod(type, periodValue, year) {
+  if (type === 'quarter') return 'Q' + periodValue + ' ' + year;
+  return MONTH_SHORT[Number(periodValue)] + ' ' + year;
+}
+
+function getCompareTotalMultiplier(type, periodValue, year) {
+  const yearLift = 1 + ((Number(year) - 2025) * (type === 'quarter' ? 0.028 : 0.012));
+  if (type === 'quarter') {
+    const quarterIndex = Number(periodValue) - 1;
+    const quarterTotals = [0,1,2,3].map(q => {
+      const start = q * 3;
+      return NEW_PROFILES_MONTHLY.slice(start, start + 3).reduce((a,b)=>a+b,0);
+    });
+    const quarterAvg = quarterTotals.reduce((a,b)=>a+b,0) / quarterTotals.length;
+    return (quarterTotals[quarterIndex] / quarterAvg) * yearLift;
+  }
+
+  const monthIndex = Number(periodValue);
+  const monthlyAvg = NEW_PROFILES_MONTHLY.reduce((a,b)=>a+b,0) / NEW_PROFILES_MONTHLY.length;
+  return (NEW_PROFILES_MONTHLY[monthIndex] / monthlyAvg) * yearLift;
+}
+
+function getComparePctMultiplier(type, periodValue, year) {
+  const monthSeasonal = [0.986,0.991,0.998,0.995,1.006,1.012,1.003,1.015,1.021,1.014,1.025,1.032];
+  const yearLift = 1 + ((Number(year) - 2025) * (type === 'quarter' ? 0.012 : 0.006));
+  if (type === 'quarter') {
+    const start = (Number(periodValue) - 1) * 3;
+    const quarterSeason = monthSeasonal.slice(start, start + 3).reduce((a,b)=>a+b,0) / 3;
+    return quarterSeason * yearLift;
+  }
+  return monthSeasonal[Number(periodValue)] * yearLift;
+}
+
 function getCustomActivityGran(fromValue, toValue) {
   const from = parseDateInput(fromValue);
   const to = parseDateInput(toValue);
@@ -678,6 +827,64 @@ function getCustomActivitySeries(series, fromValue, toValue, gran, count) {
 
 /* ── CHART INSTANCES ── */
 let fieldChart, countryChart, newChart, modChart;
+
+function getCountryFlagImage(code) {
+  if (!COUNTRY_FLAGS[code]) return null;
+  if (!COUNTRY_FLAG_IMAGES[code]) {
+    const img = new Image();
+    img.src = COUNTRY_FLAGS[code];
+    img.onload = () => { if (countryChart) countryChart.draw(); };
+    COUNTRY_FLAG_IMAGES[code] = img;
+  }
+  return COUNTRY_FLAG_IMAGES[code];
+}
+
+function hydrateCountryFilterFlags() {
+  document.querySelectorAll('[data-country-flag]').forEach(flag => {
+    const code = flag.dataset.countryFlag;
+    if (COUNTRY_FLAGS[code]) {
+      flag.style.backgroundImage = `url("${COUNTRY_FLAGS[code]}")`;
+    }
+  });
+}
+
+const countryAxisFlagPlugin = {
+  id: 'countryAxisFlagLabels',
+  afterDraw(chart, args, opts) {
+    const yScale = chart.scales.y;
+    if (!yScale || !opts || !opts.codes) return;
+
+    const ctx = chart.ctx;
+    const labelAreaWidth = opts.labelAreaWidth || 150;
+    const startX = Math.max(8, chart.chartArea.left - labelAreaWidth + 8);
+
+    ctx.save();
+    ctx.font = "11px 'IBM Plex Sans', sans-serif";
+    ctx.fillStyle = '#5C5A54';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    opts.codes.forEach((code, index) => {
+      const label = opts.labels[index] || '';
+      const y = yScale.getPixelForTick ? yScale.getPixelForTick(index) : yScale.getPixelForValue(index);
+      const img = getCountryFlagImage(code);
+      const flagY = y - 6;
+
+      if (img && img.complete && img.naturalWidth) {
+        ctx.drawImage(img, startX, flagY, 18, 12);
+      } else {
+        ctx.fillStyle = '#E2E0D8';
+        ctx.fillRect(startX, flagY, 18, 12);
+        ctx.fillStyle = '#5C5A54';
+      }
+      ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+      ctx.strokeRect(startX + 0.5, flagY + 0.5, 17, 11);
+      ctx.fillText(label, startX + 26, y);
+    });
+
+    ctx.restore();
+  }
+};
 
 /* ══════════════════════════════════════════════════════
    FILTER HELPERS
@@ -743,13 +950,75 @@ document.querySelectorAll('#field-list input[type=checkbox]:not([value="all"])')
   });
 });
 
+function setTimeGranularityLocked(isLocked) {
+  const gran = document.getElementById('f-gran');
+  gran.disabled = isLocked;
+  gran.title = isLocked
+    ? 'Time granularity is controlled by Period type while comparing the same period by year.'
+    : '';
+}
+
+function syncGranToCompareType() {
+  const type = document.getElementById('f-compare-type').value;
+  document.getElementById('f-gran').value = type === 'quarter' ? 'quarterly' : 'monthly';
+}
+
 function onGranChange() {
   const val = document.getElementById('f-gran').value;
   const wrap = document.getElementById('custom-date-wrap');
   const notice = document.getElementById('date-retro-notice');
+  const compareMode = document.getElementById('f-compare-mode');
+  const compareType = document.getElementById('f-compare-type');
+  const compareWrap = document.getElementById('compare-period-wrap');
+
   wrap.style.display = val === 'custom' ? 'block' : 'none';
   notice.style.display = val === 'custom' ? 'block' : 'none';
+
+  if (compareMode && compareMode.value === 'same-period') {
+    if (val === 'monthly' || val === 'quarterly') {
+      compareType.value = val === 'quarterly' ? 'quarter' : 'month';
+      populateComparePeriodOptions();
+    } else {
+      syncGranToCompareType();
+      populateComparePeriodOptions();
+    }
+    wrap.style.display = 'none';
+    notice.style.display = 'none';
+    compareWrap.style.display = 'block';
+    setTimeGranularityLocked(true);
+  } else {
+    setTimeGranularityLocked(false);
+  }
+
   document.getElementById('date-error').style.display = 'none';
+}
+
+function onCompareModeChange() {
+  const mode = document.getElementById('f-compare-mode').value;
+  const gran = document.getElementById('f-gran');
+  const compareType = document.getElementById('f-compare-type');
+  const compareWrap = document.getElementById('compare-period-wrap');
+  compareWrap.style.display = mode === 'same-period' ? 'block' : 'none';
+  if (mode === 'same-period') {
+    if (gran.value !== 'monthly' && gran.value !== 'quarterly') gran.value = 'monthly';
+    compareType.value = gran.value === 'quarterly' ? 'quarter' : 'month';
+    setTimeGranularityLocked(true);
+    populateComparePeriodOptions();
+    onGranChange();
+    compareWrap.style.display = 'block';
+  } else {
+    setTimeGranularityLocked(false);
+    onGranChange();
+  }
+}
+
+function onCompareTypeChange() {
+  const type = document.getElementById('f-compare-type').value;
+  syncGranToCompareType();
+  populateComparePeriodOptions();
+  setTimeGranularityLocked(true);
+  onGranChange();
+  document.getElementById('compare-period-wrap').style.display = 'block';
 }
 
 /* ══════════════════════════════════════════════════════
@@ -759,6 +1028,13 @@ function onGranChange() {
 function computeState() {
   const gran = document.getElementById('f-gran').value;
   const isDateRange = gran === 'custom';
+  const compareModeEl = document.getElementById('f-compare-mode');
+  const compareMode = compareModeEl ? compareModeEl.value : 'previous';
+  const compareType = document.getElementById('f-compare-type').value;
+  const comparePeriod = document.getElementById('f-compare-period').value;
+  const currentYear = document.getElementById('f-current-year').value;
+  const compareYear = document.getElementById('f-compare-year').value;
+  const isSamePeriodCompare = compareMode === 'same-period' && (gran === 'monthly' || gran === 'quarterly');
   const selCountries = getSelectedCountries();
   const selFields = getSelectedFields();
 
@@ -771,6 +1047,11 @@ function computeState() {
       return null;
     }
     document.getElementById('date-error').style.display = 'none';
+  }
+
+  if (isSamePeriodCompare && currentYear === compareYear) {
+    showError('Please choose a different compare year for the selected ' + compareType + '.');
+    return null;
   }
 
   const quickRange = isDateRange ? 'custom' : 'none';
@@ -790,16 +1071,21 @@ function computeState() {
   const granPctMult = GRAN_PCT_MULT[gran] || GRAN_PCT_MULT['monthly'];
   const rangeMult   = isDateRange ? RANGE_MULT['custom'] : 1;
   const granTotalMult = isDateRange ? 0.5 : (GRAN_TOTAL_MULT[gran] || 1);
+  const currentCompareTotalMult = isSamePeriodCompare ? getCompareTotalMultiplier(compareType, comparePeriod, currentYear) : 1;
+  const previousCompareTotalMult = isSamePeriodCompare ? getCompareTotalMultiplier(compareType, comparePeriod, compareYear) : 0.985;
+  const currentComparePctMult = isSamePeriodCompare ? getComparePctMultiplier(compareType, comparePeriod, currentYear) : 1;
+  const previousComparePctMult = isSamePeriodCompare ? getComparePctMultiplier(compareType, comparePeriod, compareYear) : 0.98;
 
   // profiles
-  const totalProfiles = Math.round(TOTAL_PROFILES_BASE * countryFraction * rangeMult * (isDateRange ? 1 : granTotalMult));
-  const prevTotalProfiles = Math.round(totalProfiles * 0.985);
+  const profileBase = Math.round(TOTAL_PROFILES_BASE * countryFraction * rangeMult * (isDateRange ? 1 : granTotalMult));
+  const totalProfiles = Math.round(profileBase * currentCompareTotalMult);
+  const prevTotalProfiles = Math.round(profileBase * previousCompareTotalMult);
 
   // field pcts
   const filteredFields = FIELDS_BASE.filter(f => selFields.includes(f.key));
   const adjustedFields = filteredFields.map(f => {
-    const cur  = Math.min(99.9, f.pct  * granPctMult * avgCountryMult);
-    const prev = Math.min(99.9, f.prevPct * granPctMult * avgCountryMult * 0.98);
+    const cur  = Math.min(99.9, f.pct  * granPctMult * avgCountryMult * currentComparePctMult);
+    const prev = Math.min(99.9, f.prevPct * granPctMult * avgCountryMult * previousComparePctMult);
     const curN  = Math.round(totalProfiles * cur  / 100);
     const prevN = Math.round(prevTotalProfiles * prev / 100);
     return { ...f, cur: +cur.toFixed(1), prev: +prev.toFixed(1), curN, prevN };
@@ -811,7 +1097,9 @@ function computeState() {
 
   // fully completed = profile must pass all selected fields ≥ threshold
   const fullCur  = +(adjustedFields.length ? Math.min(99, adjustedFields.reduce((a,f)=>a*(f.cur/100),1)*100 * 1.18) : 0).toFixed(1);
-  const fullPrev = +(fullCur * 0.982).toFixed(1);
+  const fullPrev = +(isSamePeriodCompare && adjustedFields.length
+    ? Math.min(99, adjustedFields.reduce((a,f)=>a*(f.prev/100),1)*100 * 1.18)
+    : fullCur * 0.982).toFixed(1);
 
   // per-country rates
   const countryRates = selCountries.map(code => {
@@ -837,7 +1125,10 @@ function computeState() {
   const scaledMod = modSeries.map(v => Math.round(v * countryFraction));
 
   return {
-    gran, quickRange, isDateRange, selCountries, selFields,
+    gran, quickRange, isDateRange, isSamePeriodCompare,
+    currentPeriodLabel: isSamePeriodCompare ? formatComparePeriod(compareType, comparePeriod, currentYear) : 'Current',
+    comparePeriodLabel: isSamePeriodCompare ? formatComparePeriod(compareType, comparePeriod, compareYear) : '',
+    selCountries, selFields,
     totalProfiles, prevTotalProfiles,
     adjustedFields, overallCur, overallPrev,
     fullCur, fullPrev,
@@ -865,6 +1156,7 @@ function renderKPIs(s) {
   document.getElementById('kpi-full').textContent    = fmtPct(s.fullCur);
 
   const granLabel = { weekly:'week', monthly:'month', quarterly:'quarter', annually:'year' }[s.gran] || 'period';
+  const comparisonLabel = s.isSamePeriodCompare ? 'vs ' + s.comparePeriodLabel : 'vs prev ' + granLabel;
 
   // total profiles
   const tDiff = s.totalProfiles - s.prevTotalProfiles;
@@ -872,19 +1164,19 @@ function renderKPIs(s) {
   const tPill = document.getElementById('kpi-total-pill');
   tPill.textContent = (tPctChange >= 0 ? '+' : '') + tPctChange.toFixed(1) + '%';
   tPill.className = 'retro-pill ' + (tDiff >= 0 ? 'up' : 'dn');
-  document.getElementById('kpi-total-retro-label').textContent = 'vs prev ' + granLabel;
+  document.getElementById('kpi-total-retro-label').textContent = comparisonLabel;
 
   // overall
   const oPill = document.getElementById('kpi-overall-pill');
   oPill.textContent = delta(s.overallCur, s.overallPrev, true);
   oPill.className = 'retro-pill ' + (s.overallCur >= s.overallPrev ? 'up' : 'dn');
-  document.getElementById('kpi-overall-retro-label').textContent = 'vs prev ' + granLabel;
+  document.getElementById('kpi-overall-retro-label').textContent = comparisonLabel;
 
   // full
   const fPill = document.getElementById('kpi-full-pill');
   fPill.textContent = delta(s.fullCur, s.fullPrev, true);
   fPill.className = 'retro-pill ' + (s.fullCur >= s.fullPrev ? 'up' : 'dn');
-  document.getElementById('kpi-full-retro-label').textContent = 'vs prev ' + granLabel;
+  document.getElementById('kpi-full-retro-label').textContent = comparisonLabel;
 
   // hide/show retro
   const retroEls = document.querySelectorAll('.retro-val');
@@ -898,11 +1190,17 @@ function renderFieldChart(s) {
   const prevData = s.adjustedFields.map(f => f.prev);
   const curN     = s.adjustedFields.map(f => f.curN);
   const prevN    = s.adjustedFields.map(f => f.prevN);
+  const currentLabel = s.currentPeriodLabel || 'Current';
+  const compareLabel = s.isSamePeriodCompare ? s.comparePeriodLabel : 'Previous period';
   const prevLegend = document.getElementById('field-prev-legend');
+  const currentLegendLabel = document.getElementById('field-current-legend-label');
+  const prevLegendLabel = document.getElementById('field-prev-legend-label');
   if (prevLegend) prevLegend.style.display = s.isDateRange ? 'none' : '';
+  if (currentLegendLabel) currentLegendLabel.textContent = currentLabel + ' %';
+  if (prevLegendLabel) prevLegendLabel.textContent = compareLabel + ' %';
   const datasets = [
     {
-      label: 'Current %',
+      label: currentLabel + ' %',
       data: curData,
       backgroundColor: '#4B89CC',
       borderRadius: 3,
@@ -914,7 +1212,7 @@ function renderFieldChart(s) {
 
   if (!s.isDateRange) {
     datasets.push({
-      label: 'Previous period %',
+      label: compareLabel + ' %',
       data: prevData,
       backgroundColor: 'rgba(180,210,240,0.5)',
       borderColor: '#A8CCE8',
@@ -946,12 +1244,12 @@ function renderFieldChart(s) {
               if (item.datasetIndex === 0) {
                 if (s.isDateRange) {
                   return [
-                    ' Current:  ' + curData[i].toFixed(1) + '%  (' + fmtNum(curN[i]) + ' filled)'
+                    ' ' + currentLabel + ':  ' + curData[i].toFixed(1) + '%  (' + fmtNum(curN[i]) + ' filled)'
                   ];
                 }
                 return [
-                  ' Current:  ' + curData[i].toFixed(1) + '%  (' + fmtNum(curN[i]) + ' filled)',
-                  ' Prev:     ' + prevData[i].toFixed(1) + '%  (' + fmtNum(prevN[i]) + ' filled)',
+                  ' ' + currentLabel + ':  ' + curData[i].toFixed(1) + '%  (' + fmtNum(curN[i]) + ' filled)',
+                  ' ' + compareLabel + ':  ' + prevData[i].toFixed(1) + '%  (' + fmtNum(prevN[i]) + ' filled)',
                   ' Change:   ' + (curData[i] - prevData[i] >= 0 ? '+' : '') + (curData[i] - prevData[i]).toFixed(1) + '% pts',
                   ' Abs Δ:    ' + (curN[i] - prevN[i] >= 0 ? '+' : '') + fmtNum(curN[i] - prevN[i]) + ' profiles',
                 ];
@@ -987,8 +1285,11 @@ function renderTable(s) {
   const tbody = document.getElementById('field-tbody');
   const changeCol = document.getElementById('col-change');
   changeCol.style.display = s.isDateRange ? 'none' : '';
+  changeCol.textContent = s.isSamePeriodCompare ? 'Delta vs Compare' : 'Delta vs Prev';
   document.getElementById('table-sub').textContent = s.isDateRange
     ? 'Date range selected — period comparison hidden'
+    : s.isSamePeriodCompare
+    ? 'Showing change vs ' + s.comparePeriodLabel
     : 'Showing change vs previous ' + s.gran.replace('ly','') + ' period';
 
   tbody.innerHTML = '';
@@ -1010,6 +1311,7 @@ function renderTable(s) {
 
 function renderCountryChart(s) {
   const labels = s.countryRates.map(c => c.label);
+  const countryCodes = s.countryRates.map(c => c.code);
   const data   = s.countryRates.map(c => c.rate);
 
   const h = Math.max(200, labels.length * 44 + 60);
@@ -1032,8 +1334,14 @@ function renderCountryChart(s) {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { left: 150 } },
       plugins: {
         legend: { display: false },
+        countryAxisFlagLabels: {
+          codes: countryCodes,
+          labels,
+          labelAreaWidth: 150,
+        },
         tooltip: {
           callbacks: { label: c => ' ' + c.parsed.x.toFixed(1) + '% completion' },
           backgroundColor: '#1A1916', titleColor: '#fff', bodyColor: 'rgba(255,255,255,.75)',
@@ -1047,11 +1355,12 @@ function renderCountryChart(s) {
           grid: { color: 'rgba(0,0,0,0.05)' }
         },
         y: {
-          ticks: { font: { size: 11 }, color: '#5C5A54' },
+          ticks: { display: false },
           grid: { display: false }
         }
       }
-    }
+    },
+    plugins: [countryAxisFlagPlugin]
   });
 }
 
@@ -1118,6 +1427,21 @@ function applyFilters() {
     if (!from || !to) { showError('Please enter both a start and end date for the custom date range.'); return; }
     if (from >= to)   { showError('End date must be later than start date.'); return; }
   }
+  const compareMode = document.getElementById('f-compare-mode').value;
+  if (compareMode === 'same-period') {
+    const compareType = document.getElementById('f-compare-type').value;
+    const expectedGran = compareType === 'quarter' ? 'quarterly' : 'monthly';
+    const currentYear = document.getElementById('f-current-year').value;
+    const compareYear = document.getElementById('f-compare-year').value;
+    if (gran !== expectedGran) {
+      showError('Same period comparison controls the time view. Please use Period Type instead of Time Granularity.');
+      return;
+    }
+    if (currentYear === compareYear) {
+      showError('Please choose a different compare year for the selected ' + compareType + '.');
+      return;
+    }
+  }
 
   const s = computeState();
   if (!s) return;
@@ -1134,6 +1458,8 @@ function applyFilters() {
 (function init() {
   const now = new Date();
   const ds = now.toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' });
+  populateComparePeriodOptions();
+  hydrateCountryFilterFlags();
   document.getElementById('footer-txt').textContent =
     'PEP Data Intelligence Platform  ·  ' + ds;
   applyFilters();
